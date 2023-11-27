@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'screens/movie_popular_screen.dart';
 import 'screens/tv_shows_popular_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/user_profile_screen.dart';
 import 'utils/theme.dart';
+import 'providers/user_session_data.dart'; // Import your UserSessionData class
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserSessionData(), // Initialize your UserSessionData provider
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -58,10 +65,12 @@ class _MyAppState extends State<MyApp> {
               label: 'Profile',
             ),
           ],
+          
           currentIndex: _selectedIndex,
           selectedItemColor: Theme.of(context).primaryColor,
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
+          
         ),
       ),
     );

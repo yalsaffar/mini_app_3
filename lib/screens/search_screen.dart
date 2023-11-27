@@ -69,39 +69,59 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Search movies, TV shows, actors...',
-            suffixIcon: IconButton(
-              icon: Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-              },
-            ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(kToolbarHeight + 15), // Adjust the height as needed
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Align the tabs and search bar to the left
+            children: [
+              SizedBox(height: 1), // Increase the height of the empty space above the tabs
+              TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(text: 'Movies'),
+                  Tab(text: 'TV Shows'),
+                  Tab(text: 'Actors'),
+                ],
+              ),
+              SizedBox(height: 8), // Add some space between the tabs and the search bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: 'Search movies, TV shows, actors...',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                  ),
+                  onSubmitted: _search,
+                ),
+              ),
+            ],
           ),
-          onSubmitted: _search,
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Movies'),
-            Tab(text: 'TV Shows'),
-            Tab(text: 'Actors'),
-          ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
+        physics: ScrollPhysics(), // Enable swipe behavior
         children: [
           _searchResultsMovies == null
-              ? Center(child: Text('Search for movies'))
+              ? Center(child: Text('Search for movies', style: TextStyle(color: Colors.white))) // Set the text color
               : _buildSearchResults(_searchResultsMovies, (movie) => MovieCard(movie: movie as Movie)),
           _searchResultsTVShows == null
-              ? Center(child: Text('Search for TV shows'))
+              ? Center(child: Text('Search for TV shows', style: TextStyle(color: Colors.white))) // Set the text color
               : _buildSearchResults(_searchResultsTVShows, (tvShow) => TVShowCard(tvShow: tvShow as TVShow)),
           _searchResultsActors == null
-              ? Center(child: Text('Search for actors'))
+              ? Center(child: Text('Search for actors', style: TextStyle(color: Colors.white))) // Set the text color
               : _buildSearchResults(_searchResultsActors, (actor) => ActorCard(actor: actor as Actor)),
         ],
       ),
