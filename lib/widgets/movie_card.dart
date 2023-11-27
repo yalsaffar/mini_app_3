@@ -6,6 +6,13 @@ class MovieCard extends StatelessWidget {
 
   MovieCard({required this.movie});
 
+  String _formatDate(DateTime? date) {
+    if (date != null) {
+      return date.toLocal().toString().split(' ')[0]; // Format date as yyyy-mm-dd
+    }
+    return 'Unknown'; // Or any placeholder text you prefer
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -36,7 +43,7 @@ class MovieCard extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Release Date: ${movie.releaseDate.toLocal().toString().split(' ')[0]}', // Format date as needed
+                  'Release Date: ${_formatDate(movie.releaseDate)}', // Use the _formatDate method
                   style: Theme.of(context).textTheme.subtitle2,
                 ),
                 SizedBox(height: 4),

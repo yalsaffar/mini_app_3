@@ -24,10 +24,12 @@ class Actor {
   // Factory method for JSON conversion if needed
   factory Actor.fromJson(Map<String, dynamic> json) {
     return Actor(
-      id: json['id'],
-      name: json['name'],
-      dateOfBirth: DateTime.parse(json['birthday']),
-      pictureUrl: 'https://image.tmdb.org/t/p/w500${json['profile_path']}', // Modify the URL according to your needs
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? 'Unknown',
+      dateOfBirth: json['birthday'] == null ? DateTime(1900) : DateTime.parse(json['birthday'] as String),
+      pictureUrl: json['profile_path'] != null
+        ? 'https://image.tmdb.org/t/p/w500${json['profile_path']}'
+        : 'https://via.placeholder.com/500?text=No+Profile+Image', // Online placeholder URL
     );
   }
 }
