@@ -4,7 +4,7 @@ class TVShow {
   final String overview;
   final String posterUrl;
   final String backdropUrl;
-  final DateTime firstAirDate;
+  final DateTime? firstAirDate;
   final double rating;
   final List<String> genres;
   final int numberOfSeasons;
@@ -16,31 +16,45 @@ class TVShow {
     required this.overview,
     required this.posterUrl,
     required this.backdropUrl,
-    required this.firstAirDate,
+    this.firstAirDate,
     required this.rating,
     required this.genres,
     required this.numberOfSeasons,
     required this.numberOfEpisodes,
   });
 
-  // Factory method to create a TVShow instance from JSON data
   factory TVShow.fromJson(Map<String, dynamic> json) {
-    List<String> genres = [];
-    if (json['genres'] != null) {
-      genres = List<String>.from(json['genres'].map((genre) => genre['name']));
+    List<String> genres = (json['genres'] as List<dynamic>?)
+        ?.map((genre) => genre['name'] as String)
+        .toList() ?? [];
+
+    int numberOfSeasons = json['number_of_seasons'] as int? ?? 0;
+    int numberOfEpisodes = json['number_of_episodes'] as int? ?? 0;
+
+    DateTime? parseDate(String? date) {
+      if (date == null || date.isEmpty) return null;
+      try {
+        return DateTime.parse(date);
+      } catch (_) {
+        return null; // Log the error or handle it as needed
+      }
     }
 
     return TVShow(
-      id: json['id'],
-      name: json['name'],
-      overview: json['overview'],
-      posterUrl: 'https://image.tmdb.org/t/p/w500${json['poster_path']}',
-      backdropUrl: 'https://image.tmdb.org/t/p/w500${json['backdrop_path']}',
-      firstAirDate: DateTime.parse(json['first_air_date']),
-      rating: json['vote_average'].toDouble(),
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'N/A',
+      overview: json['overview'] ?? 'No description available.',
+      posterUrl: json['poster_path'] != null
+          ? 'https://image.tmdb.org/t/p/w500${json['poster_path']}'
+          : 'https://via.placeholder.com/500',
+      backdropUrl: json['backdrop_path'] != null
+          ? 'https://image.tmdb.org/t/p/w500${json['backdrop_path']}'
+          : 'https://via.placeholder.com/500',
+      firstAirDate: parseDate(json['first_air_date'] as String?),
+      rating: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
       genres: genres,
-      numberOfSeasons: json['number_of_seasons'],
-      numberOfEpisodes: json['number_of_episodes'],
+      numberOfSeasons: numberOfSeasons,
+      numberOfEpisodes: numberOfEpisodes,
     );
   }
 }

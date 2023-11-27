@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
+import 'screens/movie_popular_screen.dart';
+import 'screens/tv_shows_popular_screen.dart';
+import 'screens/search_screen.dart';
+import 'screens/user_profile_screen.dart';
 import 'utils/theme.dart';
-import 'widgets/movie_card.dart';
-import 'services/tmdb_service.dart';
-import 'models/movie.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  final TMDBService tmdbService = TMDBService();
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  int _selectedIndex = 0;
+  final List<Widget> _widgetOptions = [
+    MoviePopularScreen(),
+    TVShowsPopularScreen(),
+    SearchScreen(),
+    UserProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,27 +35,33 @@ class MyApp extends StatelessWidget {
       title: 'Movie Tracker App',
       theme: appTheme,
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Trending Movies'),
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _widgetOptions,
         ),
-        body: FutureBuilder<List<Movie>>(
-          future: tmdbService.getTrendingMovies(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No movies found.'));
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  return MovieCard(movie: snapshot.data![index]);
-                },
-              );
-            }
-          },
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.movie),
+              label: 'Movies',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.tv),
+              label: 'TV Shows',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Theme.of(context).primaryColor,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
         ),
       ),
     );

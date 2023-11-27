@@ -1,46 +1,75 @@
-class TVShow {
-  final int id;
-  final String name;
-  final String overview;
-  final String posterUrl;
-  final String backdropUrl;
-  final DateTime firstAirDate;
-  final double rating;
-  final List<String> genres;
-  final int numberOfSeasons;
-  final int numberOfEpisodes;
+import 'package:flutter/material.dart';
+import '../models/tv_show.dart';
 
-  TVShow({
-    required this.id,
-    required this.name,
-    required this.overview,
-    required this.posterUrl,
-    required this.backdropUrl,
-    required this.firstAirDate,
-    required this.rating,
-    required this.genres,
-    required this.numberOfSeasons,
-    required this.numberOfEpisodes,
-  });
+class TVShowCard extends StatelessWidget {
+  final TVShow tvShow;
 
-  // Factory method to create a TVShow instance from JSON data
-  factory TVShow.fromJson(Map<String, dynamic> json) {
-    List<String> genres = [];
-    if (json['genres'] != null) {
-      genres = List<String>.from(json['genres'].map((genre) => genre['name']));
+  TVShowCard({required this.tvShow});
+
+  @override
+  Widget build(BuildContext context) {
+    // Helper function to format the date or return a default string
+    String formattedDate(DateTime? date) {
+      if (date != null) {
+        return date.toLocal().toString().split(' ')[0];
+      } else {
+        return 'Unknown'; // or any default message you'd like to use
+      }
     }
 
-    return TVShow(
-      id: json['id'],
-      name: json['name'],
-      overview: json['overview'],
-      posterUrl: 'https://image.tmdb.org/t/p/w500${json['poster_path']}',
-      backdropUrl: 'https://image.tmdb.org/t/p/w500${json['backdrop_path']}',
-      firstAirDate: DateTime.parse(json['first_air_date']),
-      rating: json['vote_average'].toDouble(),
-      genres: genres,
-      numberOfSeasons: json['number_of_seasons'],
-      numberOfEpisodes: json['number_of_episodes'],
+    return Card(
+      elevation: 4,
+      margin: EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.network(
+              tvShow.posterUrl,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tvShow.name,
+                  style: Theme.of(context).textTheme.headline6,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'First Air Date: ${formattedDate(tvShow.firstAirDate)}',
+                  style: Theme.of(context).textTheme.subtitle2,
+                ),
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    SizedBox(width: 4),
+                    Text(
+                      '${tvShow.rating.toStringAsFixed(1)}/10',
+                      style: Theme.of(context).textTheme.subtitle2,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Seasons: ${tvShow.numberOfSeasons}',
+                  style: Theme.of(context).textTheme.bodyText1,
+                ),
+                // Add more details as needed
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

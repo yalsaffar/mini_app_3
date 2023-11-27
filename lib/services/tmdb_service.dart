@@ -27,6 +27,10 @@ class TMDBService {
     final response = await http.get(Uri.parse('$baseUrl/tv/$tvShowId?api_key=$apiKey'));
     return _processResponseSingle(response, (json) => TVShow.fromJson(json));
   }
+   Future<List<TVShow>> getTrendingTVShows() async {
+    final response = await http.get(Uri.parse('$baseUrl/trending/tv/day?api_key=$apiKey'));
+    return _processResponse(response, (json) => TVShow.fromJson(json));
+  }
 
   // Utility method to process list responses
   List<T> _processResponse<T>(http.Response response, T Function(Map<String, dynamic>) fromJson) {
