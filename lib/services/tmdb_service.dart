@@ -87,4 +87,23 @@ Future<List<Movie>> searchMovies(String query) async {
       throw Exception('Failed to load data');
     }
   }
+   // Method to get details of a specific movie by ID
+  Future<Movie> getMovieDetailsById(int movieId) async {
+    final response = await http.get(Uri.parse('$baseUrl/movie/$movieId?api_key=$apiKey'));
+    if (response.statusCode == 200) {
+      return Movie.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load movie details');
+    }
+  }
+
+  // Method to get details of a specific TV show by ID
+  Future<TVShow> getTVShowDetailsById(int tvShowId) async {
+    final response = await http.get(Uri.parse('$baseUrl/tv/$tvShowId?api_key=$apiKey'));
+    if (response.statusCode == 200) {
+      return TVShow.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load TV show details');
+    }
+  }
 }

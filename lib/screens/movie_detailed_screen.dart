@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/movie.dart';
+import '../models/user_review.dart';
+import '../providers/user_session_data.dart';
+import 'package:provider/provider.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final Movie movie;
@@ -14,6 +17,17 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   bool isAddedToWatchlist = false;
   double userRating = 0.0;
   TextEditingController reviewController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load the existing review for this movie if there is one
+    final existingReview = Provider.of<UserSessionData>(context, listen: false).getReviewForItem(widget.movie.id);
+    if (existingReview != null && existingReview.isMovie) {
+      reviewController.text = existingReview.review;
+      userRating = existingReview.rating;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,15 +76,14 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 ),
                 IconButton(
                   icon: Icon(
-                    isAddedToWatchlist
-                        ? Icons.favorite
-                        : Icons.favorite_border,
+                    isAddedToWatchlist ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                     size: 30,
                   ),
                   onPressed: () {
                     setState(() {
                       isAddedToWatchlist = !isAddedToWatchlist;
+                      // Logic to add/remove from watchlist
                     });
                   },
                 ),
@@ -83,41 +96,16 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
             ),
             Row(
               children: [
-                IconButton(
-                  icon: Icon(Icons.star),
-                  color: userRating >= 1 ? Colors.amber : Colors.grey,
-                  onPressed: () {
-                    _setUserRating(1);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.star),
-                  color: userRating >= 2 ? Colors.amber : Colors.grey,
-                  onPressed: () {
-                    _setUserRating(2);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.star),
-                  color: userRating >= 3 ? Colors.amber : Colors.grey,
-                  onPressed: () {
-                    _setUserRating(3);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.star),
-                  color: userRating >= 4 ? Colors.amber : Colors.grey,
-                  onPressed: () {
-                    _setUserRating(4);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.star),
-                  color: userRating >= 5 ? Colors.amber : Colors.grey,
-                  onPressed: () {
-                    _setUserRating(5);
-                  },
-                ),
+                // Rating stars
+                ...List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(Icons.star),
+                    color: userRating > index ? Colors.amber : Colors.grey,
+                    onPressed: () {
+                      _setUserRating(index + 1);
+                    },
+                  );
+                }),
               ],
             ),
             SizedBox(height: 16),
@@ -137,8 +125,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement logic to save the user's rating and review
-                  // You can access the userRating and reviewController.text values here
+                  // Save review
+                  _saveReview(context);
                 },
                 child: Text('Submit Review'),
               ),
@@ -147,6 +135,20 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
         ),
       ),
     );
+  }
+
+  void _saveReview(BuildContext context) {
+    final review = UserReview(
+      itemID: widget.movie.id.toString(),
+      review: reviewController.text,
+      rating: userRating,
+      title: widget.movie.title,
+      posterUrl: widget.movie.posterUrl,
+      isMovie: true,
+    );
+
+    Provider.of<UserSessionData>(context, listen: false).addReview(widget.movie.id, review);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review added!')));
   }
 
   String _formatDate(DateTime? date) {

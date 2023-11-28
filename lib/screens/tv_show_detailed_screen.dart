@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/tv_show.dart';
+import '../models/user_review.dart';
+import '../providers/user_session_data.dart';
+import 'package:provider/provider.dart';
 
 class TVShowDetailsScreen extends StatefulWidget {
   final TVShow tvShow;
@@ -14,6 +17,16 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
   bool isAddedToWatchlist = false;
   double userRating = 0.0;
   TextEditingController reviewController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final existingReview = Provider.of<UserSessionData>(context, listen: false).getReviewForItem(widget.tvShow.id);
+    if (existingReview != null && !existingReview.isMovie) {
+      reviewController.text = existingReview.review;
+      userRating = existingReview.rating;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,8 +150,7 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement logic to save the user's rating and review
-                  // You can access the userRating and reviewController.text values here
+                  _saveReview(context);
                 },
                 child: Text('Submit Review'),
               ),
@@ -148,7 +160,19 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
       ),
     );
   }
+void _saveReview(BuildContext context) {
+    final review = UserReview(
+      itemID: widget.tvShow.id.toString(),
+      review: reviewController.text,
+      rating: userRating,
+      title: widget.tvShow.name,
+      posterUrl: widget.tvShow.posterUrl,
+      isMovie: false, // This is for a TV show, not a movie
+    );
 
+    Provider.of<UserSessionData>(context, listen: false).addReview(widget.tvShow.id, review);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review added!')));
+  }
   String _formatDate(DateTime? date) {
     if (date != null) {
       return date.toLocal().toString().split(' ')[0];
