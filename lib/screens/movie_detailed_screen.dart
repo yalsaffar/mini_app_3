@@ -21,11 +21,20 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load the existing review for this movie if there is one
+    loadExistingReview();
+    checkIfMovieIsInWatchlist();
+  }
+  void checkIfMovieIsInWatchlist() {
+    isAddedToWatchlist = Provider.of<UserSessionData>(context, listen: false).isInWatchlist(widget.movie.id);
+  }
+
+  void loadExistingReview() {
     final existingReview = Provider.of<UserSessionData>(context, listen: false).getReviewForItem(widget.movie.id);
     if (existingReview != null && existingReview.isMovie) {
-      reviewController.text = existingReview.review;
-      userRating = existingReview.rating;
+      setState(() {
+        reviewController.text = existingReview.review;
+        userRating = existingReview.rating;
+      });
     }
   }
 
@@ -82,8 +91,12 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                   ),
                   onPressed: () {
                     setState(() {
+                      if (isAddedToWatchlist) {
+                        Provider.of<UserSessionData>(context, listen: false).removeFromWatchlist(widget.movie.id);
+                      } else {
+                        Provider.of<UserSessionData>(context, listen: false).addToWatchlist(widget.movie.id);
+                      }
                       isAddedToWatchlist = !isAddedToWatchlist;
-                      // Logic to add/remove from watchlist
                     });
                   },
                 ),
@@ -121,16 +134,26 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Save review
-                  _saveReview(context);
-                },
-                child: Text('Submit Review'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Save review
+                    _saveReview(context);
+                  },
+                  child: Text('Submit Review'),
+                ),
+                if (Provider.of<UserSessionData>(context).getReviewForItem(widget.movie.id) != null)
+                  ElevatedButton(
+                    onPressed: () => _removeReview(context, widget.movie.id),
+                    child: Text('Remove Review'),
+                    style: ElevatedButton.styleFrom(primary: Colors.red),
+                  ),
+              ],
             ),
+            
+            
           ],
         ),
       ),
@@ -150,7 +173,14 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     Provider.of<UserSessionData>(context, listen: false).addReview(widget.movie.id, review);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review added!')));
   }
-
+void _removeReview(BuildContext context, int movieId) {
+    Provider.of<UserSessionData>(context, listen: false).removeReview(movieId);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review removed!')));
+    reviewController.clear();
+    setState(() {
+      userRating = 0.0;
+    });
+  }
   String _formatDate(DateTime? date) {
     if (date != null) {
       return date.toLocal().toString().split(' ')[0];

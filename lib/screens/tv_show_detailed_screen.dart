@@ -21,10 +21,20 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    loadExistingReview();
+  checkIfMovieIsInWatchlist();
+  }
+  void checkIfMovieIsInWatchlist() {
+    isAddedToWatchlist = Provider.of<UserSessionData>(context, listen: false).isInWatchlist(widget.tvShow.id);
+  }
+
+  void loadExistingReview() {
     final existingReview = Provider.of<UserSessionData>(context, listen: false).getReviewForItem(widget.tvShow.id);
     if (existingReview != null && !existingReview.isMovie) {
-      reviewController.text = existingReview.review;
-      userRating = existingReview.rating;
+      setState(() {
+        reviewController.text = existingReview.review;
+        userRating = existingReview.rating;
+      });
     }
   }
 
@@ -73,16 +83,19 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
                   'Add to Watchlist:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                IconButton(
+                 IconButton(
                   icon: Icon(
-                    isAddedToWatchlist
-                        ? Icons.favorite
-                        : Icons.favorite_border,
+                    isAddedToWatchlist ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                     size: 30,
                   ),
                   onPressed: () {
                     setState(() {
+                      if (isAddedToWatchlist) {
+                        Provider.of<UserSessionData>(context, listen: false).removeFromWatchlist(widget.tvShow.id);
+                      } else {
+                        Provider.of<UserSessionData>(context, listen: false).addToWatchlist(widget.tvShow.id);
+                      }
                       isAddedToWatchlist = !isAddedToWatchlist;
                     });
                   },
@@ -146,14 +159,23 @@ class _TVShowDetailsScreenState extends State<TVShowDetailsScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  _saveReview(context);
-                },
-                child: Text('Submit Review'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Save review
+                    _saveReview(context);
+                  },
+                  child: Text('Submit Review'),
+                ),
+                if (Provider.of<UserSessionData>(context).getReviewForItem(widget.tvShow.id) != null)
+                  ElevatedButton(
+                    onPressed: () => _removeReview(context, widget.tvShow.id),
+                    child: Text('Remove Review'),
+                    style: ElevatedButton.styleFrom(primary: Colors.red),
+                  ),
+              ],
             ),
           ],
         ),
@@ -167,11 +189,20 @@ void _saveReview(BuildContext context) {
       rating: userRating,
       title: widget.tvShow.name,
       posterUrl: widget.tvShow.posterUrl,
-      isMovie: false, // This is for a TV show, not a movie
+      isMovie: false,
     );
 
     Provider.of<UserSessionData>(context, listen: false).addReview(widget.tvShow.id, review);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review added!')));
+  }
+
+  void _removeReview(BuildContext context, int tvShowId) {
+    Provider.of<UserSessionData>(context, listen: false).removeReview(tvShowId);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Review removed!')));
+    reviewController.clear();
+    setState(() {
+      userRating = 0.0;
+    });
   }
   String _formatDate(DateTime? date) {
     if (date != null) {

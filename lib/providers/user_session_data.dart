@@ -13,8 +13,11 @@ class UserSessionData extends ChangeNotifier {
   
   UserSessionData() {
     loadReviews();
-    //loadMovies(); // Call this if you're loading movies from somewhere
-    //loadTVShows(); // Call this if you're loading TV shows from somewhere
+    loadMovies(); // Call this if you're loading movies from somewhere
+    loadTVShows(); // Call this if you're loading TV shows from somewhere
+  }
+   bool isInWatchlist(int itemId) {
+    return watchlist.contains(itemId);
   }
   TMDBService tmdbService = TMDBService();
   Movie? getMovieById(int id) {
@@ -34,7 +37,50 @@ class UserSessionData extends ChangeNotifier {
       return null;
     }
   }
-  
+  Future<void> loadMovies() async {
+  try {
+    movies = await tmdbService.getTrendingMovies(); // Assuming this method fetches trending movies
+    notifyListeners();
+  } catch (e) {
+    print('Error loading movies: $e');
+  }
+}
+
+Future<void> loadTVShows() async {
+  try {
+    tvShows = await tmdbService.getTrendingTVShows(); // Assuming this method fetches trending TV shows
+    notifyListeners();
+  } catch (e) {
+    print('Error loading TV shows: $e');
+  }
+}
+void addMovies(List<Movie> newMovies) {
+  for (var movie in newMovies) {
+    if (!movies.any((m) => m.id == movie.id)) {
+      movies.add(movie);
+    }
+  }
+  notifyListeners();
+}
+
+void addTVShows(List<TVShow> newTVShows) {
+  for (var tvShow in newTVShows) {
+    if (!tvShows.any((tv) => tv.id == tvShow.id)) {
+      tvShows.add(tvShow);
+    }
+  }
+  notifyListeners();
+}
+
+void removeReview(int itemId) {
+  if (reviews.containsKey(itemId)) {
+    reviews.remove(itemId);
+    _saveToPrefs();
+    notifyListeners();
+  }
+}
+
+
 
   UserReview? getReviewForItem(int itemId) {
     return reviews[itemId];

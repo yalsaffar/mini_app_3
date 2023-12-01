@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mini_app_3/models/user_review.dart';
 import 'package:mini_app_3/screens/rated_moives_tv_shows_screen.dart';
+import 'package:mini_app_3/screens/watch_list_screen.dart';
+import 'package:mini_app_3/widgets/movie_card.dart';
 import 'package:mini_app_3/widgets/review_card.dart';
+import 'package:mini_app_3/widgets/tv_show_card.dart';
+import 'package:mini_app_3/widgets/watchlist_card.dart';
 import '../providers/user_session_data.dart';
 import '../models/movie.dart';
 import '../models/tv_show.dart';
@@ -89,26 +93,60 @@ class UserProfileScreen extends StatelessWidget {
       ),
     );
   }
+Widget _buildWatchlist(BuildContext context, UserSessionData userData) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'My Watchlist',
+              style: Theme.of(context).textTheme.headline6,
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WatchListScreen()),
+                );
+              },
+              child: Text('See all'),
+            ),
+          ],
+        ),
+      ),
+      Container(
+        height: 200,
+        child: userData.watchlist.isEmpty
+            ? Center(child: Text('Your watchlist is empty'))
+            : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: userData.watchlist.length,
+                itemBuilder: (context, index) {
+                  int itemId = userData.watchlist[index];
+                  return WatchlistCard(itemId: itemId);
+                },
+              ),
+      ),
+    ],
+  );
+}
 
-  Widget _buildWatchlist(BuildContext context, UserSessionData userData) {
-    // This should be a horizontal list view showing posters of movies/TV shows in the watchlist
-    return Container(
-      height: 200, // Adjust as needed
-      child: Placeholder(), // Replace with actual watchlist content
-    );
-  }
+
+
 Widget _buildRatedList(BuildContext context, UserSessionData userData) {
   var reviewedItems = userData.reviews.values.toList();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      // Align See all button to the right
       Align(
         alignment: Alignment.topRight,
         child: TextButton(
           onPressed: () {
-            // Make sure the RatedMoviesTvShowsScreen is correctly defined in your MaterialApp routes.
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => RatedMoviesTvShowsScreen()),
@@ -124,26 +162,38 @@ Widget _buildRatedList(BuildContext context, UserSessionData userData) {
           itemCount: reviewedItems.length,
           itemBuilder: (BuildContext context, int index) {
             UserReview review = reviewedItems[index];
-            return ReviewCard(review: review);
+            return ReviewCard(
+              review: review,
+              onTap: () => _navigateToDetails(context, review, userData),
+            );
           },
         ),
       ),
     ],
   );
 }
-
-// Ensure the _navigateToDetails function is included in the UserProfileScreen widget's class
-void _navigateToDetails(BuildContext context, UserReview review) {
-  int itemId = int.tryParse(review.itemID) ?? 0;
+void _navigateToDetails(BuildContext context, UserReview review, UserSessionData userSessionData) {
+  int itemId = int.parse(review.itemID);
   if (review.isMovie) {
-    final movie = Provider.of<UserSessionData>(context, listen: false).getMovieById(itemId);
+    Movie? movie = userSessionData.getMovieById(itemId);
     if (movie != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => MovieDetailsScreen(movie: movie)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MovieDetailsScreen(movie: movie)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Movie not found')));
     }
   } else {
-    final tvShow = Provider.of<UserSessionData>(context, listen: false).getTVShowById(itemId);
+    TVShow? tvShow = userSessionData.getTVShowById(itemId);
     if (tvShow != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => TVShowDetailsScreen(tvShow: tvShow)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => TVShowDetailsScreen(tvShow: tvShow)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('TV show not found')));
     }
   }
-}}
+}
+}

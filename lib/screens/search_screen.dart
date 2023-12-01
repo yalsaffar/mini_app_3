@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mini_app_3/providers/user_session_data.dart';
+import 'package:provider/provider.dart';
 import '../services/tmdb_service.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/tv_show_card.dart';
@@ -26,17 +28,28 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     _tabController = TabController(length: 3, vsync: this);
   }
 
-  void _search(String query) {
-    if (query.isNotEmpty) {
-      setState(() {
-        // Separate the search queries by type
-        _searchResultsMovies = _tmdbService.searchMovies(query);
-        _searchResultsTVShows = _tmdbService.searchTVShows(query);
-        _searchResultsActors = _tmdbService.searchActors(query);
-        // Implement searchMovies, searchTVShows, and searchActors in your TMDBService
-      });
-    }
+ void _search(String query) {
+  if (query.isNotEmpty) {
+    setState(() {
+      _searchResultsMovies = _tmdbService.searchMovies(query);
+      _searchResultsTVShows = _tmdbService.searchTVShows(query);
+      _searchResultsActors = _tmdbService.searchActors(query);
+    });
+
+    _searchResultsMovies?.then((movies) {
+      if (movies != null) {
+        Provider.of<UserSessionData>(context, listen: false).addMovies(movies);
+      }
+    });
+    _searchResultsTVShows?.then((tvShows) {
+      if (tvShows != null) {
+        Provider.of<UserSessionData>(context, listen: false).addTVShows(tvShows);
+      }
+    });
   }
+}
+
+
 
   Widget _buildSearchResults<T>(Future<List<T>>? searchResults, Widget Function(T) buildFunction) {
     return FutureBuilder<List<T>>(
